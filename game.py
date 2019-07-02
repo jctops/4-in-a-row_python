@@ -1,5 +1,6 @@
 import numpy as np
-from human_player import Human
+import sys
+import pygame
 
 class BeckGame:
     def __init__(self, player_one, player_two, beckdata = (4,9,4)):
@@ -11,7 +12,7 @@ class BeckGame:
         self.gameover = False
         self.winner = -1
         self.moves = [(row, col) for row in range(0,self.m) for col in range(0,self.n)]
-    
+            
     @staticmethod
     def validate_beckdata(beckdata):
         assert isinstance(beckdata, tuple), "Inputted Beck data is not a tuple: {0}".format(beckdata)
@@ -111,6 +112,23 @@ class BeckGame:
     def play(self):
         turns = 0
         while turns < self.m*self.n and not self.gameover:
+            if self.player_one_turn:
+                pos = self.player_one.give_move(self.moves)
+            else:
+                pos = self.player_two.give_move(self.moves)
+            self.execute_move(pos)
+            turns += 1
+        if self.winner == 1:
+            print("Player one wins!")
+        elif self.winner == 2:
+            print("Player two wins!")
+        else:
+            print("Draw - good game!")
+        
+class BeckGameCmd(BeckGame):
+    def play(self):
+        turns = 0
+        while turns < self.m*self.n and not self.gameover:
             print(self.board)
             if self.player_one_turn:
                 pos = self.player_one.give_move(self.moves)
@@ -125,3 +143,53 @@ class BeckGame:
         else:
             print("Draw - good game!")
         print(self.board)
+
+class BeckGameVisual(BeckGame): 
+    BLACK = (0,0,0)
+    WHITE = (255,255,255)
+    DARK_BROWN = (222, 184, 135)
+    LIGHT_BROWN = (255, 248, 220)
+    SQUARESIZE = 100
+    RADIUS = int(SQUARESIZE/2 - 5)
+    
+    def __init__(self, player_one, player_two, beckdata = (4,9,4)):
+        self.player_one = player_one
+        self.player_two = player_two
+        self.m, self.n, self.k = self.validate_beckdata(beckdata)
+        self.board = np.zeros((self.m, self.n))
+        self.player_one_turn = True
+        self.gameover = False
+        self.winner = -1
+        self.moves = [(row, col) for row in range(0,self.m) for col in range(0,self.n)]
+        
+        self.height = self.SQUARESIZE * self.m
+        self.width = self.SQUARESIZE * self.n
+        self.size = (self.width, self.height)
+        pygame.init()
+        self.screen = pygame.display.set_mode(self.size)
+    
+    def draw_board(self):
+        pygame.draw.rect(self.screen, self.DARK_BROWN, (0,0,self.width,self.height))
+        for row in range(self.m):
+            for col in range(self.n):
+                colour = self.WHITE if self.board[row,col] == 1 else self.BLACK if self.board[row,col] == 2 else self.LIGHT_BROWN
+                pygame.draw.circle(self.screen, colour, (int(col*self.SQUARESIZE+self.SQUARESIZE/2), int(row*self.SQUARESIZE+self.SQUARESIZE/2)), self.RADIUS)
+        pygame.display.update()
+    
+    def play(self):
+        turns = 0
+        while turns < self.m*self.n and not self.gameover:
+            self.draw_board()
+            if self.player_one_turn:
+                pos = self.player_one.give_move(self.moves)
+            else:
+                pos = self.player_two.give_move(self.moves)
+            self.execute_move(pos)
+            turns += 1
+        if self.winner == 1:
+            print("Player one wins!")
+        elif self.winner == 2:
+            print("Player two wins!")
+        else:
+            print("Draw - good game!")
+        self.draw_board()

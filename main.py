@@ -1,5 +1,8 @@
-from game import BeckGame
-from human_player import Human
+#from game import BeckGame
+#from game import BeckGameCmd as BeckGame
+from game import BeckGameVisual as BeckGame
+#from human_player import Human
+from human_player import HumanVisual as Human
 
 def main():
     player_one = Human()
