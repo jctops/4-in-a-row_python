@@ -34,20 +34,12 @@ class BeckGame:
     
     def check_win_downright(self, pos):
         return self.check_array_elements_same(
-            [self.board[pos[0], pos[1]],
-             self.board[pos[0]+1, pos[1]+1],
-             self.board[pos[0]+2, pos[1]+2],
-             self.board[pos[0]+3, pos[1]+3]
-            ]
+            [self.board[pos[0]+i, pos[1]+i] for i in range(self.k)]
         )
     
     def check_win_downleft(self, pos):
         return self.check_array_elements_same(
-            [self.board[pos[0], pos[1]],
-             self.board[pos[0]+1, pos[1]-1],
-             self.board[pos[0]+2, pos[1]-2],
-             self.board[pos[0]+3, pos[1]-3]
-            ]
+            [self.board[pos[0]+i, pos[1]-i] for i in range(self.k)]
         )
     
     def check_win_up(self, pos):
@@ -55,20 +47,12 @@ class BeckGame:
     
     def check_win_upright(self, pos):
         return self.check_array_elements_same(
-            [self.board[pos[0], pos[1]],
-             self.board[pos[0]-1, pos[1]+1],
-             self.board[pos[0]-2, pos[1]+2],
-             self.board[pos[0]-3, pos[1]+3]
-            ]
+            [self.board[pos[0]-i, pos[1]+i] for i in range(self.k)]
         )
     
     def check_win_upleft(self, pos):
         return self.check_array_elements_same(
-            [self.board[pos[0], pos[1]],
-             self.board[pos[0]-1, pos[1]-1],
-             self.board[pos[0]-2, pos[1]-2],
-             self.board[pos[0]-3, pos[1]-3]
-            ]
+            [self.board[pos[0]-i, pos[1]-i] for i in range(self.k)]
         )
     
     def check_win_right(self, pos):
@@ -76,7 +60,7 @@ class BeckGame:
     
     def check_win_left(self, pos):
         return self.check_array_elements_same(self.board[pos[0], pos[1]-self.k+1:pos[1]+1])
-    
+    '''  
     def check_win(self, pos):
         won = False
         if pos[0] <= self.m - self.k:
@@ -97,7 +81,30 @@ class BeckGame:
             won = won or self.check_win_left(pos)
         if won:
             return won, 1 if self.player_one_turn else 2
-        return won, -1
+        return won, -1'''
+    
+    def check_win(self, pos):
+        won = False
+        
+        possible_downs = [(pos[0]-i, pos[1]) for i in range(self.k) if pos[0]>=i and pos[0]-i+self.k<=self.m]
+        for _pos in possible_downs:
+            won = won or self.check_win_down(_pos)
+            
+        possible_rights = [(pos[0], pos[1]-i) for i in range(self.k) if pos[1]>=i and pos[1]-i+self.k<=self.n]
+        for _pos in possible_rights:
+            won = won or self.check_win_right(_pos)
+            
+        possible_downrights = [(pos[0]-i, pos[1]-i) for i in range(self.k) if pos[0]>=i and pos[0]-i+self.k<=self.m and pos[1]>=i and pos[1]-i+self.k<=self.n]
+        for _pos in possible_downrights:
+            won = won or self.check_win_downright(_pos)
+            
+        possible_uprights = [(pos[0]+i, pos[1]-i) for i in range(self.k) if pos[0]+i+1>=self.k and pos[0]+i<self.m and pos[1]>=i and pos[1]-i+self.k<=self.n]
+        for _pos in possible_uprights:
+            won = won or self.check_win_upright(_pos)
+            
+        if won:
+            return won, 1 if self.player_one_turn else 2
+        return won, -1        
     
     def execute_move(self, pos):
         assert self.board[pos] == 0, "Position is not available: {0}".format(pos)
@@ -113,9 +120,9 @@ class BeckGame:
         turns = 0
         while turns < self.m*self.n and not self.gameover:
             if self.player_one_turn:
-                pos = self.player_one.give_move(self.moves)
+                pos = self.player_one.give_move(self.moves, self.board)
             else:
-                pos = self.player_two.give_move(self.moves)
+                pos = self.player_two.give_move(self.moves, self.board)
             self.execute_move(pos)
             turns += 1
         if self.winner == 1:
@@ -124,6 +131,7 @@ class BeckGame:
             print("Player two wins!")
         else:
             print("Draw - good game!")
+        return self.winner
         
 class BeckGameCmd(BeckGame):
     def play(self):
@@ -181,9 +189,9 @@ class BeckGameVisual(BeckGame):
         while turns < self.m*self.n and not self.gameover:
             self.draw_board()
             if self.player_one_turn:
-                pos = self.player_one.give_move(self.moves)
+                pos = self.player_one.give_move(self.moves, self.board)
             else:
-                pos = self.player_two.give_move(self.moves)
+                pos = self.player_two.give_move(self.moves, self.board)
             self.execute_move(pos)
             turns += 1
         if self.winner == 1:
@@ -193,3 +201,8 @@ class BeckGameVisual(BeckGame):
         else:
             print("Draw - good game!")
         self.draw_board()
+        return self.winner
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    sys.exit()
